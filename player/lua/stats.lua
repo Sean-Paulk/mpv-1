@@ -499,11 +499,24 @@ local function add_video(s)
                         {prefix="FPS:", suffix=" (estimated)"})
     end
 
+    -- Three, lazy functions  used to determine video resolution, listed in chronological order
+    -- Video input from the file, post rendering scaling, and the re-sizing of the osd+rendered content
     append_display_sync(s)
     append_perfdata(s, o.print_perfdata_passes)
-
-    if append(s, r["w"], {prefix="Native Resolution:"}) then
-        append(s, r["h"], {prefix="x", nl="", indent=" ", prefix_sep=" ", no_prefix_markup=true})
+    if append_property(s, "video-params/w", {prefix="V-I:", suffix=" x"}) then
+    append(s, r["video-params/h"], {prefix="x", nl="", indent=" ", prefix_sep=" ", no_prefix_markup=true})
+append_property(s, "osd-height",
+                        {suffix=" ", nl="", indent=""})
+    end
+     if append_property(s, "dwidth", {prefix="V-O:", suffix=" x"}) then
+    append(s, r["dheight"], {prefix="x", nl="", indent=" ", prefix_sep=" ", no_prefix_markup=true})
+append_property(s, "osd-height",
+                        {suffix=" ", nl="", indent=""})
+    end
+    if append_property(s, "osd-width", {prefix="V-S:", suffix=" x"}) then
+    append(s, r["osd-height"], {prefix="x", nl="", indent=" ", prefix_sep=" ", no_prefix_markup=true})
+append_property(s, "osd-height",
+                        {suffix=" ", nl="", indent=""})
     end
     append_property(s, "window-scale", {prefix="Window Scale:"})
     append(s, format("%.2f", r["aspect"]), {prefix="Aspect Ratio:"})
@@ -529,6 +542,9 @@ end
 
 local function add_audio(s)
     local r = mp.get_property_native("audio-params")
+    local rr = mp.get_property_native("audio-out-params")
+    -- shows 'channels' after the render chain 
+    -- can be used to evaluate if 'channels,' is being mapped differently than source input
     -- in case of e.g. lavi-complex there can be no input audio, only output
     if not r then
         r = mp.get_property_native("audio-out-params")
@@ -539,7 +555,8 @@ local function add_audio(s)
 
     append(s, "", {prefix=o.nl .. o.nl .. "Audio:", nl="", indent=""})
     append_property(s, "audio-codec", {prefix_sep="", nl="", indent=""})
-    local cc = append(s, r["channel-count"], {prefix="Channels:"})
+    local cc = append(s, r["channel-count"], {prefix="Channels-in:"})
+    append(s, rr["channel-count"], {prefix="Channels-out:", nl=cc and "" or o.nl})
     append(s, r["format"], {prefix="Format:", nl=cc and "" or o.nl})
     append(s, r["samplerate"], {prefix="Sample Rate:", suffix=" Hz"})
     append_property(s, "packet-audio-bitrate", {prefix="Bitrate:", suffix=" kbps"})
